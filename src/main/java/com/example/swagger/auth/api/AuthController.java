@@ -28,7 +28,7 @@ public class AuthController {
      * <p>
      * 사용자가 선택한 소셜 플랫폼과 액세스 토큰을 통해 인증을 수행합니다.
      *
-     * @param provider    소셜 플랫폼 이름 (예: google, kakao, naver)
+     * @param provider    소셜 플랫폼 이름 (예: google, kakao, apple)
      * @param accessToken 소셜 플랫폼에서 제공한 엑세스 토큰
      * @return {@link AuthResponse} JWT 토큰, 사용자 ID, 신규 사용자 여부를 포함한 응답 객체
      */
@@ -38,7 +38,7 @@ public class AuthController {
     @ApiResponse(responseCode = "200", description = "로그인 성공", content = @Content(schema = @Schema(implementation = AuthResponse.class)))
     @ApiResponse(responseCode = "400", description = "잘못된 요청")
     public AuthResponse socialLogin(
-            @Parameter(description = "소셜 플랫폼 (google, kakao, naver)", example = "google") @RequestParam String provider,
+            @Parameter(description = "소셜 플랫폼 (google, kakao, apple)", example = "google") @RequestParam String provider,
             @Parameter(description = "소셜 엑세스 토큰", required = true) @RequestParam String accessToken) {
         // 예제 응답
         return new AuthResponse("jwt-token", "userId123", true);

@@ -1,5 +1,10 @@
 package com.example.swagger.fitting.application;
 
+import com.example.swagger.fitting.dto.NailCombinationRequest;
+import com.example.swagger.fitting.dto.NailCombinationResponse;
+import com.example.swagger.fitting.dto.NailStorageItem;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -33,5 +38,36 @@ public class FittingService {
     public String applyDesign(String imageUrl, Long designId) {
         // 가상 디자인 적용 로직 (AI, OpenCV 등 사용)
         return "http://example.com/virtual-fitted-image.png"; // 가상 피팅 결과 이미지 URL 반환
+    }
+
+    /**
+     * 네일 조합 적용
+     *
+     * @param request 네일 디자인 ID 목록
+     * @return {@link NailCombinationResponse} 조합된 결과 이미지 URL
+     */
+    public NailCombinationResponse applyCombination(NailCombinationRequest request) {
+        String combinedImageUrl = "http://example.com/combined-nail.png";
+        return new NailCombinationResponse(combinedImageUrl);
+    }
+
+    private final List<NailStorageItem> storage = new ArrayList<>();
+
+    /**
+     * 보관함 목록 조회
+     *
+     * @return 보관함에 저장된 네일 디자인 목록
+     */
+    public List<NailStorageItem> getStorage() {
+        return storage;
+    }
+
+    /**
+     * 보관함에 디자인 추가
+     *
+     * @param item 보관함에 추가할 네일 디자인 정보
+     */
+    public void addToStorage(NailStorageItem item) {
+        storage.add(item);
     }
 }

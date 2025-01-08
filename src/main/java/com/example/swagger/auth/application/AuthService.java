@@ -15,7 +15,7 @@ public class AuthService {
     /**
      * 소셜 로그인 처리
      *
-     * @param provider    소셜 플랫폼 이름 (예: google, kakao, naver)
+     * @param provider    소셜 플랫폼 이름 (예: google, kakao, apple)
      * @param accessToken 소셜 플랫폼에서 제공한 엑세스 토큰
      * @return {@link AuthResponse} JWT 토큰, 사용자 ID, 신규 사용자 여부를 포함한 응답 객체
      */
