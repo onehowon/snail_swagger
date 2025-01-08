@@ -1,8 +1,15 @@
-package com.example.swagger.global;
+package com.example.swagger.post.application;
 
+import com.example.swagger.post.request.PostCreateRequest;
+import com.example.swagger.post.request.PostUpdateRequest;
+import com.example.swagger.post.response.PostCreateResponse;
+import com.example.swagger.post.response.PostListReadResponse;
+import com.example.swagger.post.response.PostReadResponse;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
+@Service
 @RequiredArgsConstructor
 @Getter
 public class PostService {
