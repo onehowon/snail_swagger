@@ -12,7 +12,7 @@ public class AiNailService {
      * @param request 네일 조합 요청 데이터
      * @return 생성된 AI 네일 그룹 ID (예시)
      */
-    public Long createNailGroup(AiNailRequest aiNailRequest){
+    public Long createNailGroup(AiNailRequest request){
         return 100L;
         // 임시 로직
     }

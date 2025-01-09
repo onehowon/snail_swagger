@@ -5,6 +5,7 @@ import com.example.swagger.auth.dto.SocialLoginRequest;
 import com.example.swagger.auth.dto.SocialLoginResponse;
 import com.example.swagger.global.CommonResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,6 +30,7 @@ public class SocialLoginController {
 
     @PostMapping("/social-login")
     @Operation(summary = "소셜 로그인", description = "소셜 로그인 처리를 수행합니다.")
+    @ApiResponse(responseCode = "200", description = "로그인 성공")
     public CommonResponse<SocialLoginResponse> socialLogin(@RequestBody SocialLoginRequest request) {
         SocialLoginResponse response = socialLoginService.socialLogin(request);
         return CommonResponse.success(response);
