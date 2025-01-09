@@ -2,8 +2,11 @@ package com.example.swagger.user.application;
 
 import com.example.swagger.user.dto.UserRequest;
 import com.example.swagger.user.dto.UserResponse;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +17,8 @@ import org.springframework.stereotype.Service;
 public class UserService {
 
     /** 사용자 데이터를 저장하는 메모리 내 리스트 (임시) */
-    private final List<UserResponse> users = new ArrayList<>();
+    private final Map<Long, UserResponse> users = new HashMap<>();
+    private Long idCounter = 1L;
 
     /**
      * 사용자 등록
@@ -24,11 +28,18 @@ public class UserService {
      */
 
     public UserResponse createUser(UserRequest request) {
-        // 임시 사용자 ID 생성
-        Long userId = (long) (users.size() + 1);
-        UserResponse user = new UserResponse(userId, request.getNickname());
-        users.add(user);
-        return user;
+        LocalDateTime now = LocalDateTime.now();
+
+        UserResponse newUser = new UserResponse(
+                idCounter,
+                request.getNickname(),
+                request.getUserType(),
+                request.getRegisteredIp(),
+                now,
+                null
+        );
+        users.put(idCounter++, newUser);
+        return newUser;
     }
 
     /**
@@ -38,9 +49,9 @@ public class UserService {
      * @return 조회된 사용자 정보
      */
     public UserResponse getUserById(Long id) {
-        return users.stream()
-                .filter(user -> user.getId().equals(id))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        if(!users.containsKey(id)){
+            throw new RuntimeException("사용자를 찾을 수 없음");
+        }
+        return users.get(id);
     }
 }
