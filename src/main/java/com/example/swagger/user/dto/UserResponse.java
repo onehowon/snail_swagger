@@ -1,50 +1,32 @@
 package com.example.swagger.user.dto;
 
+import com.example.swagger.user.dto.UserDTO.UserMeta;
+import com.example.swagger.user.dto.UserDTO.UserPreference;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /**
- * 사용자 정보 응답 DTO 클래스
+ * 사용자 응답 데이터
  */
-@Getter
-@Schema(description = "사용자 정보 응답 DTO")
+@Data
+@AllArgsConstructor
+@Schema(description = "사용자 응답 데이터")
 public class UserResponse {
 
-    @Schema(description = "사용자 ID", example = "1")
-    private final Long id;
+    @Schema(description = "사용자 닉네임", example = "네일리안0001")
+    private String nickName;
 
-    @Schema(description = "닉네임", example = "123")
-    private final String nickname;
+    @Schema(description = "사용자 타입", example = "CUSTOMER")
+    private String userType;
 
-    @Schema(description = "사용자 유형", example = "일반 유저")
-    private final String userType;
+    @Schema(description = "사용자 메타 정보")
+    private UserMeta meta;
 
-    @Schema(description = "등록된 IP 주소", example = "192.168.0.1")
-    private final String registeredIp;
-
-    @Schema(description = "계정 생성 임시", example = "2025-01-01T00:00:00")
-    private final LocalDateTime createdAt;
-
-    @Schema(description = "계정 삭제 일시", example = "2025-01-01T00:00:01")
-    private final LocalDateTime deletedAt;
-
-    /**
-     * UserResponse 생성자
-     *
-     * @param id 사용자 ID
-     * @param nickname 닉네임
-     * @param userType 사용자 유형
-     * @param registeredIp 등록된 IP 주소
-     * @param createdAt 계정 생성 일시
-     * @param deletedAt 계정 삭제 일시
-     */
-    public UserResponse(Long id, String nickname, String userType, String registeredIp, LocalDateTime createdAt, LocalDateTime deletedAt) {
-        this.id = id;
-        this.nickname = nickname;
-        this.userType = userType;
-        this.registeredIp = registeredIp;
-        this.createdAt = createdAt;
-        this.deletedAt = deletedAt;
-    }
+    @Schema(description = "사용자 선호 정보")
+    private UserPreference preference;
 }
+
