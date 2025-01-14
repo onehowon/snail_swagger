@@ -16,9 +16,6 @@ import lombok.Getter;
 public class ContentListResponse {
     @Schema(description = "추천 콘텐츠 항목 리스트")
     private final List<ContentItem> contents;
-
-    @Schema(description = "총 콘텐츠 수", example = "100")
-    private final int totalElements;
 }
 
 

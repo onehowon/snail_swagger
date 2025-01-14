@@ -1,6 +1,7 @@
 package com.example.swagger.user.api;
 
 
+import com.example.swagger.global.CommonResponse;
 import com.example.swagger.global.ErrorResponse;
 import com.example.swagger.user.dto.UserDTO.UserMeta;
 import com.example.swagger.user.dto.UserDTO.UserPreference;
@@ -14,15 +15,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * User API
@@ -30,9 +27,10 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/user")
+@Tag(name = "User", description = "유저 관련 API")
 public class UserController {
 
-    private final Map<Integer, UserResponse> userDatabase = new ConcurrentHashMap<>();
+    private final Map<String, UserResponse> userDatabase = new ConcurrentHashMap<>();
     private final AtomicInteger userIdCounter = new AtomicInteger(1);
 
     /**
@@ -45,80 +43,46 @@ public class UserController {
                             schema = @Schema(implementation = UserResponse.class))),
             @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class)))
+                            schema = @Schema(implementation = CommonResponse.class)))
     })
     @PostMapping
     public ResponseEntity<?> createUser(@RequestBody UserRequest userRequest) {
         if (userRequest.getNickname() == null || userRequest.getUserType() == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ErrorResponse("유효하지 않은 요청 데이터입니다."));
+            return ResponseEntity.badRequest()
+                    .body(CommonResponse.success("유효하지 않은 요청 데이터입니다."));
         }
 
-        int userId = userIdCounter.getAndIncrement();
+        String userId = "nailian_" + userIdCounter.getAndIncrement();
         UserResponse newUser = new UserResponse(
-                "네일리안" + String.format("%04d", userId),
+                userRequest.getNickname(),
                 userRequest.getUserType(),
                 new UserMeta(userRequest.getNickname(), "01012341234", "1"),
-                new UserPreference(0.1f, 0.1f, 0.1f)
+                new UserPreference(0.1, 0.1, 0.1)
         );
 
         userDatabase.put(userId, newUser);
-        return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
+        return ResponseEntity.status(201).body(CommonResponse.success(newUser));
     }
 
     /**
-     * 사용자 조회
+     * 내 프로필 조회
      */
-    @Operation(summary = "사용자 조회", description = "ID로 특정 사용자를 조회합니다.")
+    @Operation(summary = "내 프로필 조회", description = "현재 로그인된 사용자의 프로필 정보를 조회합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "사용자 조회 성공",
+            @ApiResponse(responseCode = "200", description = "프로필 조회 성공",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = UserResponse.class))),
-            @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음",
+            @ApiResponse(responseCode = "404", description = "프로필을 찾을 수 없음",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class)))
+                            schema = @Schema(implementation = CommonResponse.class)))
     })
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getUser(@PathVariable int id) {
-        UserResponse user = userDatabase.get(id);
+    @GetMapping("/me")
+    public ResponseEntity<?> getMyProfile(@RequestHeader("Authorization") String userId) {
+        UserResponse user = userDatabase.get(userId);
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ErrorResponse("사용자를 찾을 수 없습니다."));
+            return ResponseEntity.status(404)
+                    .body(CommonResponse.success("프로필을 찾을 수 없습니다."));
         }
-        return ResponseEntity.ok(user);
-    }
-
-    /**
-     * 사용자 목록 조회
-     */
-    @Operation(summary = "사용자 목록 조회", description = "모든 사용자를 조회합니다.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "사용자 목록 조회 성공",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = UserResponse[].class)))
-    })
-    @GetMapping
-    public ResponseEntity<?> listUsers() {
-        return ResponseEntity.ok(userDatabase.values());
-    }
-
-    /**
-     * 사용자 삭제
-     */
-    @Operation(summary = "사용자 삭제", description = "ID로 특정 사용자를 삭제합니다.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "사용자 삭제 성공"),
-            @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class)))
-    })
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable int id) {
-        if (!userDatabase.containsKey(id)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ErrorResponse("사용자를 찾을 수 없습니다."));
-        }
-        userDatabase.remove(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(CommonResponse.success(user));
     }
 }

@@ -2,6 +2,7 @@ package com.example.swagger.auth.api;
 
 import com.example.swagger.auth.dto.AuthDTO.AuthRequest;
 import com.example.swagger.auth.dto.AuthDTO.AuthResponse;
+import com.example.swagger.global.CommonResponse;
 import com.example.swagger.global.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -13,6 +14,9 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,8 +29,14 @@ import org.springframework.web.bind.annotation.RestController;
  * Auth API
  * 인증 및 토큰 관리
  */
+/**
+ * Auth API
+ * 인증 및 토큰 관리
+ */
 @RestController
 @RequestMapping("/auth")
+@RequiredArgsConstructor
+@Tag(name = "Auth", description = "인증 관련 API")
 public class AuthController {
 
     private final Map<String, LocalDateTime> refreshTokenStore = new HashMap<>();
@@ -41,16 +51,43 @@ public class AuthController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "토큰 발급 성공",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = AuthResponse.class))),
+                            schema = @Schema(implementation = CommonResponse.class,
+                                    example = """
+                                            {
+                                                "code": 200,
+                                                "message": "토큰이 성공적으로 발급되었습니다.",
+                                                "data": {
+                                                    "refreshToken": "sampleRefreshToken123",
+                                                    "accessToken": "sampleAccessToken123"
+                                                }
+                                            }
+                                            """))),
             @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class)))
+                            schema = @Schema(implementation = CommonResponse.class,
+                                    example = """
+                                            {
+                                                "code": 400,
+                                                "message": "유효하지 않은 요청입니다.",
+                                                "data": null
+                                            }
+                                            """))),
+            @ApiResponse(responseCode = "401", description = "권한 없음",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = CommonResponse.class,
+                                    example = """
+                                            {
+                                                "code": 401,
+                                                "message": "인증되지 않은 사용자입니다.",
+                                                "data": null
+                                            }
+                                            """)))
     })
     @PostMapping("/token")
     public ResponseEntity<?> issueToken(@RequestBody AuthRequest authRequest) {
-        if (authRequest.getCode() == null || authRequest.getCode().isEmpty()) {
+        if (authRequest.getAuthorizationcode() == null || authRequest.getAuthorizationcode().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ErrorResponse("code 값이 유효하지 않습니다."));
+                    .body(CommonResponse.success("code 값이 유효하지 않습니다."));
         }
 
         String accessToken = generateToken();
@@ -58,13 +95,11 @@ public class AuthController {
         refreshTokenStore.put(refreshToken, LocalDateTime.now());
 
         AuthResponse authResponse = new AuthResponse(
-                "Bearer",
                 accessToken,
-                refreshToken,
-                TOKEN_VALIDITY_DAYS * 86400 // 30일 (초 단위)
+                refreshToken
         );
 
-        return ResponseEntity.ok(authResponse);
+        return ResponseEntity.ok(CommonResponse.success(authResponse));
     }
 
     /**
@@ -74,19 +109,19 @@ public class AuthController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "토큰 갱신 성공",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = AuthResponse.class))),
+                            schema = @Schema(implementation = CommonResponse.class))),
             @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class))),
+                            schema = @Schema(implementation = CommonResponse.class))),
             @ApiResponse(responseCode = "401", description = "권한 없음",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class)))
+                            schema = @Schema(implementation = CommonResponse.class)))
     })
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(@RequestHeader("Authorization") String refreshToken) {
         if (refreshToken == null || refreshToken.isEmpty() || !refreshToken.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ErrorResponse( "유효하지 않은 토큰입니다."));
+                    .body(CommonResponse.success("유효하지 않은 토큰입니다."));
         }
 
         refreshToken = refreshToken.replace("Bearer ", "");
@@ -94,13 +129,13 @@ public class AuthController {
 
         if (issuedAt == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new ErrorResponse("토큰이 존재하지 않습니다."));
+                    .body(CommonResponse.success("토큰이 존재하지 않습니다."));
         }
 
         long daysSinceIssued = ChronoUnit.DAYS.between(issuedAt, LocalDateTime.now());
         if (daysSinceIssued >= TOKEN_VALIDITY_DAYS) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new ErrorResponse("토큰이 만료되었습니다."));
+                    .body(CommonResponse.success("토큰이 만료되었습니다."));
         }
 
         if (daysSinceIssued >= TOKEN_HALF_LIFE_DAYS) {
@@ -110,27 +145,23 @@ public class AuthController {
             refreshTokenStore.put(newRefreshToken, LocalDateTime.now());
 
             AuthResponse authResponse = new AuthResponse(
-                    "Bearer",
                     newAccessToken,
-                    newRefreshToken,
-                    TOKEN_VALIDITY_DAYS * 86400 // 30일 (초 단위)
+                    newRefreshToken
             );
 
             // 기존 토큰 삭제
             refreshTokenStore.remove(refreshToken);
 
-            return ResponseEntity.ok(authResponse);
+            return ResponseEntity.ok(CommonResponse.success(authResponse));
         }
 
         // 아직 유효한 경우
         AuthResponse authResponse = new AuthResponse(
-                "Bearer",
                 "accessTokenStillValidExample",
-                refreshToken,
-                (int) ((TOKEN_VALIDITY_DAYS - daysSinceIssued) * 86400) // 남은 유효기간
+                refreshToken
         );
 
-        return ResponseEntity.ok(authResponse);
+        return ResponseEntity.ok(CommonResponse.success(authResponse));
     }
 
     /**
